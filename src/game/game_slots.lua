@@ -222,6 +222,11 @@ local ID_CHERRY = 1
 local ID_LEMON = 2
 local ID_GRAPE = 3
 local ID_SEVEN = 4
+local SLOT_VOLUME = 0.5
+local SLOT_INSTRUMENT = "hat"
+local SLOT_ONE_PITCH = 4
+local SLOT_TWO_PITCH = 5
+local SLOT_THREE_PITCH = 6
 
 -- Contains the slot layouts for each slot (they must be different so that you don't win 3 horizontals at a time)
 local SLOTS = {
@@ -350,9 +355,9 @@ function Play()
         DrawSlot(slot0Index, 1, lsx, 128)
         DrawSlot(slot1Index, 2, csx, 256)
         DrawSlot(slot2Index, 3, rsx, 128)
-        speaker.playNote("bass", 1.0, 4)
-        speaker.playNote("bass", 1.0, 8)
-        speaker.playNote("bass", 1.0, 12)
+        speaker.playNote(SLOT_INSTRUMENT, SLOT_VOLUME, SLOT_ONE_PITCH)
+        speaker.playNote(SLOT_INSTRUMENT, SLOT_VOLUME, SLOT_TWO_PITCH)
+        speaker.playNote(SLOT_INSTRUMENT, SLOT_VOLUME, SLOT_THREE_PITCH)
         sleep(0.1)
     end
 
@@ -363,8 +368,8 @@ function Play()
         slot2Index = slot2Index + 1
         DrawSlot(slot1Index, 2, csx, 256)
         DrawSlot(slot2Index, 3, rsx, 128)
-        speaker.playNote("bass", 1.0, 8)
-        speaker.playNote("bass", 1.0, 12)
+        speaker.playNote(SLOT_INSTRUMENT, SLOT_VOLUME, SLOT_TWO_PITCH)
+        speaker.playNote(SLOT_INSTRUMENT, SLOT_VOLUME, SLOT_THREE_PITCH)
         sleep(0.1)
     end
 
@@ -373,7 +378,7 @@ function Play()
     for i = 1,numSpins do
         slot2Index = slot2Index + 1
         DrawSlot(slot2Index, 3, rsx, 128)
-        speaker.playNote("bass", 1.0, 12)
+        speaker.playNote(SLOT_INSTRUMENT, SLOT_VOLUME, SLOT_THREE_PITCH)
         sleep(0.1)
     end
 
@@ -412,7 +417,7 @@ function Play()
             table.insert(lines, {x = c0, y = r0, ex = c2, ey = r0})
         elseif IsFruit(slot0row0) and IsFruit(slot1row0) and IsFruit(slot2row0) then
             -- If they don't match but they are all fruit, get your bet back
-            win = win + betAmount
+            win = win + (betAmount * 1.5)
             table.insert(lines, {x = c0, y = r0, ex = c2, ey = r0})
         end
     end
@@ -424,7 +429,7 @@ function Play()
             table.insert(lines, {x = c0, y = r1, ex = c2, ey = r1})
         elseif IsFruit(slot0row1) and IsFruit(slot1row1) and IsFruit(slot2row1) then
             -- If they don't match but they are all fruit, get your bet back
-            win = win + betAmount
+            win = win + (betAmount * 1.5)
             table.insert(lines, {x = c0, y = r1, ex = c2, ey = r1})
         end
     end
@@ -436,7 +441,7 @@ function Play()
             table.insert(lines, {x = c0, y = r2, ex = c2, ey = r2})
         elseif IsFruit(slot0row2) and IsFruit(slot1row2) and IsFruit(slot2row2) then
             -- If they don't match but they are all fruit, get your bet back
-            win = win + betAmount
+            win = win + (betAmount * 1.5)
             table.insert(lines, {x = c0, y = r2, ex = c2, ey = r2})
         end
     end
@@ -450,7 +455,7 @@ function Play()
             table.insert(lines, {x = c0, y = r0, ex = c2, ey = r2})
         elseif IsFruit(slot0row0) and IsFruit(slot1row1) and IsFruit(slot2row2) then
             -- If they don't match but they are all fruit, get your bet back
-            win = win + betAmount
+            win = win + (betAmount * 1.5)
             table.insert(lines, {x = c0, y = r0, ex = c2, ey = r2})
         end
     end
@@ -462,7 +467,7 @@ function Play()
             table.insert(lines, {x = c0, y = r2, ex = c2, ey = r0})
         elseif IsFruit(slot0row2) and IsFruit(slot1row1) and IsFruit(slot2row0) then
             -- If they don't match but they are all fruit, get your bet back
-            win = win + betAmount
+            win = win + (betAmount * 1.5)
             table.insert(lines, {x = c0, y = r2, ex = c2, ey = r0})
         end
     end
@@ -472,7 +477,7 @@ function Play()
     if slot0row1 ~= ID_EMPTY and slot1row0 ~= ID_EMPTY and slot2row1 ~= ID_EMPTY then
         if slot0row1 == slot1row0 and slot0row1 == slot2row1 then
             -- 2x bet
-            win = win + (betAmount * 1 * ResolveTypeMultiplier(slot0row1))
+            win = win + (betAmount * ResolveTypeMultiplier(slot0row1))
             table.insert(lines, {x = c0, y = r1, ex = c1, ey = r0})
             table.insert(lines, {x = c1, y = r0, ex = c2, ey = r1})
         elseif IsFruit(slot0row1) and IsFruit(slot1row0) and IsFruit(slot2row1) then
@@ -486,7 +491,7 @@ function Play()
     if slot0row0 ~= ID_EMPTY and slot1row1 ~= ID_EMPTY and slot2row0 ~= ID_EMPTY then
         if slot0row0 == slot1row1 and slot0row0 == slot2row0 then
             -- 2x bet
-            win = win + (betAmount * 1 * ResolveTypeMultiplier(slot0row0))
+            win = win + (betAmount * ResolveTypeMultiplier(slot0row0))
             table.insert(lines, {x = c0, y = r0, ex = c1, ey = r1})
             table.insert(lines, {x = c1, y = r1, ex = c2, ey = r0})
         elseif IsFruit(slot0row0) and IsFruit(slot1row1) and IsFruit(slot2row0) then
@@ -500,7 +505,7 @@ function Play()
     if slot0row1 ~= ID_EMPTY and slot1row2 ~= ID_EMPTY and slot2row1 ~= ID_EMPTY then
         if slot0row1 == slot1row2 and slot0row1 == slot2row1 then
             -- 2x bet
-            win = win + (betAmount * 1 * ResolveTypeMultiplier(slot0row1))
+            win = win + (betAmount * ResolveTypeMultiplier(slot0row1))
             table.insert(lines, {x = c0, y = r1, ex = c1, ey = r2})
             table.insert(lines, {x = c1, y = r2, ex = c2, ey = r1})
         elseif IsFruit(slot0row1) and IsFruit(slot1row2) and IsFruit(slot2row1) then
@@ -514,7 +519,7 @@ function Play()
     if slot0row2 ~= ID_EMPTY and slot1row1 ~= ID_EMPTY and slot2row2 ~= ID_EMPTY then
         if slot0row2 == slot1row1 and slot0row2 == slot2row2 then
             -- 2x bet
-            win = win + (betAmount * 1 * ResolveTypeMultiplier(slot0row2))
+            win = win + (betAmount * ResolveTypeMultiplier(slot0row2))
             table.insert(lines, {x = c0, y = r2, ex = c1, ey = r1})
             table.insert(lines, {x = c1, y = r1, ex = c2, ey = r2})
         elseif IsFruit(slot0row2) and IsFruit(slot1row1) and IsFruit(slot2row2) then
