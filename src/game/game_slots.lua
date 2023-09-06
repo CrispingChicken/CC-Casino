@@ -532,23 +532,11 @@ function Play()
     else
         print("You won " .. win .. " diamonds!")
 
-        local remainingToBalance = win - MoveBalance(bankStorage, balanceStorage, win)
+        local remainingBalanceToPay = win - MoveBalance(bankStorage, balanceStorage, win)
         -- If there is any remaining balance to pay, the bank chest is empty and we need to print a playNote
-        if remainingToBalance > 0 then
-            term.restore()
-            if printer == nil then
-                print("PRINTER IS NIL")
-            end
-            if printerStorage == nil then
-                print("PRINTER CHEST IS NIL")
-            end
-            if withdrawalStorage == nil then
-                print("WITHDRAWAL STORAGE IS NIL")
-            end
-            term.redirect(monitor)
-
+        if remainingBalanceToPay > 0 then
             -- Print balance owed and save to our local storage
-            ProcessBalanceOwed(gameId, remainingToBalance, balanceName, printer, printerStorage, withdrawalStorage)
+            ProcessBalanceOwed(gameId, remainingBalanceToPay, balanceName, printer, printerStorage, withdrawalStorage)
         end
 
         -- Draw the win lines
