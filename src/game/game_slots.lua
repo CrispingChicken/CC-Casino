@@ -151,7 +151,7 @@ function EnterCreditsScene(depositStorage, balanceChest, gameName, betAmount)
     term.setCursorPos(cx - (#betAmountStr / 2) + 1, 3)
     print(betAmountStr)
 
-    while (redstone.getInput(PLAY_REDSTONE_SIDE) == false and redstone.getInput(WITHDRAW_REDSTONE_SIDE) == false) or GetBalance(balanceChest) < betAmount do
+    while redstone.getInput(PLAY_REDSTONE_SIDE) == false and (redstone.getInput(WITHDRAW_REDSTONE_SIDE) == false or GetBalance(balanceChest) < betAmount) do
         -- Move all deposit storage credits into balance chest
         local depositStorageCredits = GetBalance(depositStorage)
         MoveBalance(depositStorage, balanceChest, depositStorageCredits)
