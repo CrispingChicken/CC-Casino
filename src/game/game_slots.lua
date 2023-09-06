@@ -608,7 +608,7 @@ while true do
 
                 -- Move all deposit storage credits into balance chest
                 local depositStorageCredits = GetBalance(depositStorage)
-                MoveBalance(depositStorage, balanceChest, depositStorageCredits)
+                MoveBalance(depositStorage, balanceStorage, depositStorageCredits)
 
                 local exitSignal = redstone.getInput(WITHDRAW_REDSTONE_SIDE)
                 if exitSignal == true then
