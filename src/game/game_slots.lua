@@ -534,6 +534,8 @@ function Play()
     term.setCursorPos(1, 2)
     term.setBackgroundColor(colors.orange)
     term.setTextColor(colors.black)
+
+    win = math.floor(win)
     if win == 0 then
         print("Better luck next time!")
     else
