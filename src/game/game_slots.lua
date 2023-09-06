@@ -4,22 +4,30 @@
 -- Simulate 1000 plays and see if a profit or loss is made
 -- Not printing when bank balance is too low - when it used to print due to a bug it was breaking
 
--- Peripherals
-local monitor = peripheral.wrap("monitor_0")
-local speaker = peripheral.wrap("speaker_0")
-local printer = peripheral.wrap("printer_0")
-local withdrawalStorage = peripheral.wrap("minecraft:barrel_0")
-local depositStorage = peripheral.wrap("minecraft:barrel_1")
-local balanceChest = peripheral.wrap("minecraft:chest_0")
-local bankChest = peripheral.wrap("minecraft:chest_1")
-local printerChest = peripheral.wrap("minecraft:chest_4")
+-- Load this computers config
+local config = dofile("config.lua")
 
-local BALANCE_TYPE = "minecraft:diamond"
-local BALANCE_NAME = "diamonds"
-local BALANCE_IMG = "diamond_image.nfp"
+-- Peripherals
+local monitor = config.monitor
+local speaker = config.speaker
+local printer = config.printer
+local withdrawalStorage = config.withdrawalStorage
+local depositStorage = config.depositStorage
+local balanceStorage = config.balanceStorage
+local bankStorage = config.bankStorage
+local printerStorage = config.printerStorage
+
+-- Betting config
+local balanceType = config.balanceType
+local balanceName = config.balanceName
+local balanceImage = config.balanceImage
+local gameId = config.gameId
+local betAmount = config.betAmount
+local bankThreshold = config.bankThreshold
+
+-- Redstone input locations
 local PLAY_REDSTONE_SIDE = "left"
 local WITHDRAW_REDSTONE_SIDE = "right"
-local GAME_ID_STR = "SL-01"
 
 function MoveItems(fromChest, toChest, itemName, count)
     -- For some reason you need the chest name for the 'to chest'
@@ -42,7 +50,7 @@ end
 
 -- Move balance from one chest to another. Assumes that the chest only contains diamonds for balance
 function MoveBalance(fromChest, toChest, count)
-    return MoveItems(fromChest, toChest, BALANCE_TYPE, count)
+    return MoveItems(fromChest, toChest, balanceType, count)
 end
 
 -- Get number of items in the chest
@@ -58,7 +66,7 @@ end
 
 -- Get the balance of a chest
 function GetBalance(chest)
-    return GetStorageItemCount(chest, BALANCE_TYPE)
+    return GetStorageItemCount(chest, balanceType)
 end
 
 -- Generate unique identifier string
@@ -120,7 +128,7 @@ end
 
 -- Move credits from the depositStorage into the balanceChest and then count and display. Returns false for withdrawal and true for play
 function EnterCreditsScene(depositStorage, balanceChest, gameName, betAmount)
-    local balanceImg = paintutils.loadImage(BALANCE_IMG)
+    local balanceImg = paintutils.loadImage(balanceImage)
     local imageW, imageH = 10, 8
     local info = "Click button to play"
     local betAmountStr = "Bet Amount: " .. betAmount
@@ -173,7 +181,7 @@ function EnterCreditsScene(depositStorage, balanceChest, gameName, betAmount)
 end
 
 function EnterBankAdminScene(bankChest, threshold)
-    local balanceImg = paintutils.loadImage(BALANCE_IMG)
+    local balanceImg = paintutils.loadImage(balanceImage)
     local imageW, imageH = 10, 8
     local w, h = term.getSize()
     local imgX = (w / 2) - (imageW / 2)
@@ -202,7 +210,6 @@ local grapeImg = paintutils.loadImage("slot_grape.nfp")
 local sevenImg = paintutils.loadImage("slot_seven.nfp")
 
 -- Consts
-local BET_AMOUNT = 5
 local SLOT_START_Y = 3
 local SLOT_WIDTH = 8
 local SLOT_HEIGHT = 15
@@ -213,7 +220,6 @@ local ID_CHERRY = 1
 local ID_LEMON = 2
 local ID_GRAPE = 3
 local ID_SEVEN = 4
-local BANK_THRESHOLD = 50
 
 -- Contains the slot layouts for each slot (they must be different so that you don't win 3 horizontals at a time)
 local SLOTS = {
@@ -273,8 +279,8 @@ function UpdateBalance()
     term.setCursorPos(1, 1)
     term.setBackgroundColor(colors.orange)
     term.setTextColor(colors.black)
-    local balance = GetBalance(balanceChest)
-    print("Balance: " .. balance .. ", Bet: " .. BET_AMOUNT)
+    local balance = GetBalance(balanceStorage)
+    print("Balance: " .. balance .. ", Bet: " .. betAmount)
     return balance
 end
 
@@ -321,7 +327,7 @@ function Play()
     local balance = UpdateBalance()
 
     -- Check balance
-    if balance < BET_AMOUNT then
+    if balance < betAmount then
         term.setCursorPos(1, 2)
         print("Not enough balance")
         sleep(5)
@@ -329,8 +335,8 @@ function Play()
     end
 
     -- Consume balance
-    MoveBalance(balanceChest, bankChest, BET_AMOUNT)
-    balance = balance - BET_AMOUNT
+    MoveBalance(balanceStorage, bankStorage, betAmount)
+    balance = balance - betAmount
     UpdateBalance()
 
     -- Spin all 3 slots
@@ -400,11 +406,11 @@ function Play()
     if slot0row0 ~= ID_EMPTY and slot1row0 ~= ID_EMPTY and slot2row0 ~= ID_EMPTY then
         if slot0row0 == slot1row0 and slot0row0 == slot2row0 then
             -- top row win - you get 2x your bet * slot multiplier
-            win = win + (BET_AMOUNT * 2 * ResolveTypeMultiplier(slot0row0))
+            win = win + (betAmount * 2 * ResolveTypeMultiplier(slot0row0))
             table.insert(lines, {x = c0, y = r0, ex = c2, ey = r0})
         elseif IsFruit(slot0row0) and IsFruit(slot1row0) and IsFruit(slot2row0) then
             -- If they don't match but they are all fruit, get your bet back
-            win = win + BET_AMOUNT
+            win = win + betAmount
             table.insert(lines, {x = c0, y = r0, ex = c2, ey = r0})
         end
     end
@@ -412,11 +418,11 @@ function Play()
     if slot0row1 ~= ID_EMPTY and slot1row1 ~= ID_EMPTY and slot2row1 ~= ID_EMPTY then
         if slot0row1 == slot1row1 and slot0row1 == slot2row1 then
             -- middle row win - you get 5x your bet
-            win = win + (BET_AMOUNT * 5  * ResolveTypeMultiplier(slot0row1))
+            win = win + (betAmount * 5  * ResolveTypeMultiplier(slot0row1))
             table.insert(lines, {x = c0, y = r1, ex = c2, ey = r1})
         elseif IsFruit(slot0row1) and IsFruit(slot1row1) and IsFruit(slot2row1) then
             -- If they don't match but they are all fruit, get your bet back
-            win = win + BET_AMOUNT
+            win = win + betAmount
             table.insert(lines, {x = c0, y = r1, ex = c2, ey = r1})
         end
     end
@@ -424,11 +430,11 @@ function Play()
     if slot0row2 ~= ID_EMPTY and slot1row2 ~= ID_EMPTY and slot2row2 ~= ID_EMPTY then
         if slot0row2 == slot1row2 and slot0row2 == slot2row2 then
             -- bottom row win - you get 2x your bet
-            win = win + (BET_AMOUNT * 2 * ResolveTypeMultiplier(slot0row2))
+            win = win + (betAmount * 2 * ResolveTypeMultiplier(slot0row2))
             table.insert(lines, {x = c0, y = r2, ex = c2, ey = r2})
         elseif IsFruit(slot0row2) and IsFruit(slot1row2) and IsFruit(slot2row2) then
             -- If they don't match but they are all fruit, get your bet back
-            win = win + BET_AMOUNT
+            win = win + betAmount
             table.insert(lines, {x = c0, y = r2, ex = c2, ey = r2})
         end
     end
@@ -438,11 +444,11 @@ function Play()
     if slot0row0 ~= ID_EMPTY and slot1row1 ~= ID_EMPTY and slot2row2 ~= ID_EMPTY then
         if slot0row0 == slot1row1 and slot0row0 == slot2row2 then
             -- top left to bottom right win - you get 3x your bet
-            win = win + (BET_AMOUNT * 3 * ResolveTypeMultiplier(slot0row0))
+            win = win + (betAmount * 3 * ResolveTypeMultiplier(slot0row0))
             table.insert(lines, {x = c0, y = r0, ex = c2, ey = r2})
         elseif IsFruit(slot0row0) and IsFruit(slot1row1) and IsFruit(slot2row2) then
             -- If they don't match but they are all fruit, get your bet back
-            win = win + BET_AMOUNT
+            win = win + betAmount
             table.insert(lines, {x = c0, y = r0, ex = c2, ey = r2})
         end
     end
@@ -450,11 +456,11 @@ function Play()
     if slot0row2 ~= ID_EMPTY and slot1row1 ~= ID_EMPTY and slot0row2 ~= ID_EMPTY then
         if slot0row2 == slot1row1 and slot0row2 == slot2row0 then
             -- bottom right to top left win - you get 3x your bet
-            win = win + (BET_AMOUNT * 3 * ResolveTypeMultiplier(slot0row2))
+            win = win + (betAmount * 3 * ResolveTypeMultiplier(slot0row2))
             table.insert(lines, {x = c0, y = r2, ex = c2, ey = r0})
         elseif IsFruit(slot0row2) and IsFruit(slot1row1) and IsFruit(slot2row0) then
             -- If they don't match but they are all fruit, get your bet back
-            win = win + BET_AMOUNT
+            win = win + betAmount
             table.insert(lines, {x = c0, y = r2, ex = c2, ey = r0})
         end
     end
@@ -464,12 +470,12 @@ function Play()
     if slot0row1 ~= ID_EMPTY and slot1row0 ~= ID_EMPTY and slot2row1 ~= ID_EMPTY then
         if slot0row1 == slot1row0 and slot0row1 == slot2row1 then
             -- 2x bet
-            win = win + (BET_AMOUNT * 1 * ResolveTypeMultiplier(slot0row1))
+            win = win + (betAmount * 1 * ResolveTypeMultiplier(slot0row1))
             table.insert(lines, {x = c0, y = r1, ex = c1, ey = r0})
             table.insert(lines, {x = c1, y = r0, ex = c2, ey = r1})
         elseif IsFruit(slot0row1) and IsFruit(slot1row0) and IsFruit(slot2row1) then
             -- If they don't match but they are all fruit, get your bet back
-            win = win + BET_AMOUNT
+            win = win + betAmount
             table.insert(lines, {x = c0, y = r1, ex = c1, ey = r0})
             table.insert(lines, {x = c1, y = r0, ex = c2, ey = r1})
         end
@@ -478,12 +484,12 @@ function Play()
     if slot0row0 ~= ID_EMPTY and slot1row1 ~= ID_EMPTY and slot2row0 ~= ID_EMPTY then
         if slot0row0 == slot1row1 and slot0row0 == slot2row0 then
             -- 2x bet
-            win = win + (BET_AMOUNT * 1 * ResolveTypeMultiplier(slot0row0))
+            win = win + (betAmount * 1 * ResolveTypeMultiplier(slot0row0))
             table.insert(lines, {x = c0, y = r0, ex = c1, ey = r1})
             table.insert(lines, {x = c1, y = r1, ex = c2, ey = r0})
         elseif IsFruit(slot0row0) and IsFruit(slot1row1) and IsFruit(slot2row0) then
             -- If they don't match but they are all fruit, get your bet back
-            win = win + BET_AMOUNT
+            win = win + betAmount
             table.insert(lines, {x = c0, y = r0, ex = c1, ey = r1})
             table.insert(lines, {x = c1, y = r1, ex = c2, ey = r0})
         end
@@ -492,12 +498,12 @@ function Play()
     if slot0row1 ~= ID_EMPTY and slot1row2 ~= ID_EMPTY and slot2row1 ~= ID_EMPTY then
         if slot0row1 == slot1row2 and slot0row1 == slot2row1 then
             -- 2x bet
-            win = win + (BET_AMOUNT * 1 * ResolveTypeMultiplier(slot0row1))
+            win = win + (betAmount * 1 * ResolveTypeMultiplier(slot0row1))
             table.insert(lines, {x = c0, y = r1, ex = c1, ey = r2})
             table.insert(lines, {x = c1, y = r2, ex = c2, ey = r1})
         elseif IsFruit(slot0row1) and IsFruit(slot1row2) and IsFruit(slot2row1) then
             -- If they don't match but they are all fruit, get your bet back
-            win = win + BET_AMOUNT
+            win = win + betAmount
             table.insert(lines, {x = c0, y = r1, ex = c1, ey = r2})
             table.insert(lines, {x = c1, y = r2, ex = c2, ey = r1})
         end
@@ -506,12 +512,12 @@ function Play()
     if slot0row2 ~= ID_EMPTY and slot1row1 ~= ID_EMPTY and slot2row2 ~= ID_EMPTY then
         if slot0row2 == slot1row1 and slot0row2 == slot2row2 then
             -- 2x bet
-            win = win + (BET_AMOUNT * 1 * ResolveTypeMultiplier(slot0row2))
+            win = win + (betAmount * 1 * ResolveTypeMultiplier(slot0row2))
             table.insert(lines, {x = c0, y = r2, ex = c1, ey = r1})
             table.insert(lines, {x = c1, y = r1, ex = c2, ey = r2})
         elseif IsFruit(slot0row2) and IsFruit(slot1row1) and IsFruit(slot2row2) then
             -- If they don't match but they are all fruit, get your bet back
-            win = win + BET_AMOUNT
+            win = win + betAmount
             table.insert(lines, {x = c0, y = r2, ex = c1, ey = r1})
             table.insert(lines, {x = c1, y = r1, ex = c2, ey = r2})
         end
@@ -526,14 +532,14 @@ function Play()
     else
         print("You won " .. win .. " diamonds!")
 
-        local remainingToBalance = win - MoveBalance(bankChest, balanceChest, win)
+        local remainingToBalance = win - MoveBalance(bankStorage, balanceStorage, win)
         -- If there is any remaining balance to pay, the bank chest is empty and we need to print a playNote
         if remainingToBalance > 0 then
             term.restore()
             if printer == nil then
                 print("PRINTER IS NIL")
             end
-            if printerChest == nil then
+            if printerStorage == nil then
                 print("PRINTER CHEST IS NIL")
             end
             if withdrawalStorage == nil then
@@ -542,7 +548,7 @@ function Play()
             term.redirect(monitor)
 
             -- Print balance owed and save to our local storage
-            ProcessBalanceOwed(GAME_ID_STR, remainingToBalance, BALANCE_NAME, printer, printerChest, withdrawalStorage)
+            ProcessBalanceOwed(gameId, remainingToBalance, balanceName, printer, printerStorage, withdrawalStorage)
         end
 
         -- Draw the win lines
@@ -568,17 +574,17 @@ end
 
 while true do
     -- Check balance of the bank chest is above or equal to the threshold to play, break if not
-    local bankBalance = GetBalance(bankChest)
-    if bankBalance < BANK_THRESHOLD then
-        EnterBankAdminScene(bankChest, BANK_THRESHOLD)
+    local bankBalance = GetBalance(bankStorage)
+    if bankBalance < bankThreshold then
+        EnterBankAdminScene(bankStorage, bankThreshold)
         speaker.playNote("guitar", 1.0, 4)
         sleep(0.4)
         speaker.playNote("guitar", 1.0, 1)
     else
-        local play = EnterCreditsScene(depositStorage, balanceChest, "Slots", BET_AMOUNT)
+        local play = EnterCreditsScene(depositStorage, balanceStorage, "Slots", betAmount)
         if play == false then
             -- Withdraw
-            MoveBalance(balanceChest, withdrawalStorage, GetBalance(balanceChest))
+            MoveBalance(balanceStorage, withdrawalStorage, GetBalance(balanceStorage))
             for i=1,3 do
                 speaker.playNote("bell", 2.0, 12)
                 sleep(0.2)
@@ -588,10 +594,10 @@ while true do
             local playing = Play()
             while playing do
                 -- Check balance of the bank chest is above or equal to the threshold to play, break if not
-                bankBalance = GetBalance(bankChest)
-                if bankBalance < BANK_THRESHOLD then
+                bankBalance = GetBalance(bankStorage)
+                if bankBalance < bankThreshold then
                     -- Withdraw automatically
-                    MoveBalance(balanceChest, withdrawalStorage, GetBalance(balanceChest))
+                    MoveBalance(balanceStorage, withdrawalStorage, GetBalance(balanceStorage))
                     break
                 end
 
@@ -599,7 +605,7 @@ while true do
                 local exitSignal = redstone.getInput(WITHDRAW_REDSTONE_SIDE)
                 if exitSignal == true then
                     -- When the player makes a withdrawal, move all from the balance chest to the withdrawal chest
-                    MoveBalance(balanceChest, withdrawalStorage, GetBalance(balanceChest))
+                    MoveBalance(balanceStorage, withdrawalStorage, GetBalance(balanceStorage))
                     for i=1,3 do
                         speaker.playNote("bell", 2.0, 12)
                         sleep(0.2)
