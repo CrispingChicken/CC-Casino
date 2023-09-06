@@ -535,11 +535,6 @@ function Play()
         print("You won " .. win .. " diamonds!")
 
         local remainingBalanceToPay = win - MoveBalance(bankStorage, balanceStorage, win)
-        -- If there is any remaining balance to pay, the bank chest is empty and we need to print a playNote
-        if remainingBalanceToPay > 0 then
-            -- Print balance owed and save to our local storage
-            ProcessBalanceOwed(gameId, remainingBalanceToPay, balanceName, printer, printerStorage, withdrawalStorage)
-        end
 
         -- Draw the win lines
         for i=1,5 do
@@ -553,6 +548,17 @@ function Play()
                 paintutils.drawLine(line.x, line.y, line.ex, line.ey, colors.lime)
             end
             sleep(0.25)
+        end
+
+        -- If there is any remaining balance to pay, the bank chest is empty and we need to print a playNote
+        if remainingBalanceToPay > 0 then
+            term.setCursorPos(1, 2)
+            term.setBackgroundColor(colors.orange)
+            term.setTextColor(colors.black)
+            print("Bank balance empty, printing receipt...")
+
+            -- Print balance owed and save to our local storage
+            ProcessBalanceOwed(gameId, remainingBalanceToPay, balanceName, printer, printerStorage, withdrawalStorage)
         end
     end
 
