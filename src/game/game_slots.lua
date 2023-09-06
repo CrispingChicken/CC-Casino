@@ -116,11 +116,13 @@ end
 function ProcessBalanceOwed(gameIdStr, amount, balanceName, printer, printerChest, withdrawalStorage)
     local uniqueIdentifier = gameIdStr .. "-" .. GenerateUniqueIdentifier()
     local printState = PrintBalanceOwedNote(printer, amount, balanceName, uniqueIdentifier)
+    local slipItemName = "computercraft:printed_page"
+
     -- Wait enough time for the printed not to transport to the printer chest
     sleep(1.0)
     -- If print was successful, move the note to the withdrawal storage for the player to keep
     if printState == true then
-        MoveItems(printerChest, withdrawalStorage, itemName, GetStorageItemCount(itemName))
+        MoveItems(printerChest, withdrawalStorage, slipItemName, GetStorageItemCount(printerChest, slipItemName))
     end
 
     WriteBalanceOwedFile(amount, balanceName, uniqueIdentifier, printState)
