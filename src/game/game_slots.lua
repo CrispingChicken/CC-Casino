@@ -566,6 +566,11 @@ function Play()
 
             -- Print balance owed and save to our local storage
             ProcessBalanceOwed(gameId, remainingBalanceToPay, balanceName, printer, printerStorage, withdrawalStorage)
+
+            -- Withdraw automatically
+            MoveBalance(balanceStorage, withdrawalStorage, GetBalance(balanceStorage))
+
+            return false
         end
     end
 
