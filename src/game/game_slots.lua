@@ -603,6 +603,11 @@ while true do
                 end
 
                 os.pullEvent("redstone")
+
+                -- Move all deposit storage credits into balance chest
+                local depositStorageCredits = GetBalance(depositStorage)
+                MoveBalance(depositStorage, balanceChest, depositStorageCredits)
+
                 local exitSignal = redstone.getInput(WITHDRAW_REDSTONE_SIDE)
                 if exitSignal == true then
                     -- When the player makes a withdrawal, move all from the balance chest to the withdrawal chest
